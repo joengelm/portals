@@ -38,7 +38,7 @@ function init() {
 		controls = new THREE.DeviceOrientationControls(camera);
 		setupTapRec();
 	} else {
-		controls = new THREE.OrbitControls( camera, renderer.domElement );
+		controls = new THREE.OrbitControls(camera, renderer.domElement);
 		controls.enableDamping = true;
 		controls.dampingFactor = 0.25;
 		setupClickRec();
@@ -88,7 +88,7 @@ function onClick(event) {
 	setSelectedObject(obj);
 
 }
-window.addEventListener('click', onClick, false);
+window.addEventListener('mousedown', onClick, false);
 
 function animate() {
 	frame++;
@@ -118,17 +118,16 @@ function animate() {
 
 var _selectedObject = null;
 function setSelectedObject(obj){
+	if (obj.name in videos) {
+		v = videos[obj.name];
+		vid = v.video;
+		console.log(obj.name);
+		vid.pause();
+		vid.currentTime = 0;
+		vid.play();
+	}
 	if (obj !== _selectedObject) {
 		_selectedObject = obj;
-		
-		if (obj.name in videos) {
-			v = videos[obj.name];
-			vid = v.video;
-			console.log(obj.name);
-			vid.pause();
-			vid.currentTime = 0;
-			vid.play();
-		}
 	}
 }
 
