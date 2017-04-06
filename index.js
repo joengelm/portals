@@ -76,17 +76,18 @@ var rotatingObjects = [];
 var mouse = new THREE.Vector2();
 function onClick(event) {
 
-	// calculate mouse position in normalized device coordinates
-	// (-1 to +1) for both components
+	if (!inFullscreen) {
+		// calculate mouse position in normalized device coordinates
+		// (-1 to +1) for both components
 
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-	raycaster.setFromCamera( mouse, camera );
-	var intersects = raycaster.intersectObjects( scene.children ).map(function(p){return p.object});
-	console.log(intersects);
-	var obj = intersects.length ? intersects[0] : null;
-	setSelectedObject(obj);
-
+		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		raycaster.setFromCamera( mouse, camera );
+		var intersects = raycaster.intersectObjects( scene.children ).map(function(p){return p.object});
+		console.log(intersects);
+		var obj = intersects.length ? intersects[0] : null;
+		setSelectedObject(obj);
+	}
 }
 window.addEventListener('mousedown', onClick, false);
 
@@ -116,15 +117,37 @@ function animate() {
 	render();
 }
 
+var inFullscreen = false;
 var _selectedObject = null;
 function setSelectedObject(obj){
 	if (obj.name in videos) {
 		v = videos[obj.name];
 		vid = v.video;
 		console.log(obj.name);
-		vid.pause();
-		vid.currentTime = 0;
-		vid.play();
+		vid.src = '';
+
+		const f = document.getElementById('fullscreen');
+		f.src = 'videos/' + obj.name + '.mp4';
+		f.style.zIndex = 1000;
+		f.play();
+
+		document.getElementById('overlay').style.zIndex = 999;
+
+		inFullscreen = true;
+
+		f.addEventListener('click', e => {
+			console.log('fullscreen clicked');
+			f.src = '';
+			f.style.zIndex = -100;
+			document.getElementById('overlay').style.zIndex = -100;
+
+			inFullscreen = false;
+			
+			vid = videos[obj.name].video;
+			vid.src = 'videos/' + obj.name + '.mp4';
+			vid.play();
+			console.log(vid);
+		});
 	}
 	if (obj !== _selectedObject) {
 		_selectedObject = obj;
@@ -136,7 +159,7 @@ function render() {
 }
 
 function createSkybox() {
-	const boxes = ['Park3Med/', 'MilkyWay/dark-s_', 'SwedishRoyalCastle/', 'pisa/', 'skybox/'];
+	const boxes = ['Park3Med/', 'MilkyWay/dark-s_', 'SwedishRoyalCastle/', 'skybox/'];
 	const r = 'cube/' + boxes[Math.floor(Math.random() * boxes.length)];
 	var ext = '.jpg';
 	var urls = [ r + "px" + ext, r + "nx" + ext,
@@ -299,16 +322,12 @@ function setupVideos() {
 		video.id = name;
 		// video.type = ' video/ogg; codecs="theora, vorbis" ';
 		video.src = 'videos/' + name + '.mp4';
-		video.load(); // must call after setting/changing source
 		video.play();
 
 		video.addEventListener('ended', e => {
-			console.log('ended');
-			// TODO: this doesn't seem to work...
-			setTimeout(() => {
-				video.currentTime = 0;
-				video.play();
-			}, 500);
+			console.log('target', e.target);
+			e.target.currentTime = 0;
+			e.target.play();
 		});
 		
 		videoImage = document.createElement('canvas');
